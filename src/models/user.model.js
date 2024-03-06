@@ -37,7 +37,7 @@ const userSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: "Video"
         }],
-        passwords: {
+        password: {
             type: String,
             require: [true, 'Password is required']
         },
@@ -49,6 +49,13 @@ const userSchema = new Schema(
         timestamps: true
     }
 )
+
+userSchema.pre("save", async function(next) {
+    if(!this.isModified("password")) 
+    return next();
+    this.passwords = bcrypt.hash(this.password, 10)
+    next()
+})
 
 
 export const user = mongoose.model("User", userSchema)

@@ -87,5 +87,4 @@ userSchema.methods.generateRefreashToken = function(){
     )
 }
 
-
 export const user = mongoose.model("User", userSchema)

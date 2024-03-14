@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js"
 import { user } from "../models/user.model.js"
 import uploadOnCloudinary from "../utils/cloudnary.js"
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerUser = asyncHandler( async (req, res) => {
     // res.status(200).json({
@@ -45,6 +46,36 @@ const registerUser = asyncHandler( async (req, res) => {
    if(!avatarLocalPath){
     throw new ApiError (404, "avtar is required")
    }
+
+   const avatar = await uploadOnCloudinary(avatarLocalPath)
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+  if(!avatar){
+    throw new ApiError (404, "avtar is required")
+  }
+
+  const user = await user.create({
+    fullName,
+    avatar: avatar.url,
+    coverImage: coverImage?.url || "",
+    email,
+    password,
+    username: username.toLowerCase()
+  })
+
+  const CreatedUser = await user.findById(user._id).select(
+    "-password -refreshToken"
+  )
+
+  if(!CreatedUser){
+    throw new ApiError(500, "something went wrong while ragistring the user")
+  }
+
+
+  return res.status(201).json(
+    new ApiResponse(200, CreatedUser, "user ragistered successfull")
+  )
+
 
 })
 

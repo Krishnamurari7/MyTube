@@ -1,6 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js"
-import { user } from "../models/user.model.js"
+import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudnary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 
@@ -21,20 +21,20 @@ const registerUser = asyncHandler( async (req, res) => {
     //return response
 
 
-    const {fullName, email, username, password} =req.body
+    const {fullName, email, userName, password} =req.body
     console.log("email", email);
 
     // if(fullName === ""){
     //     throw new ApiError(400, "fullName is required")
     // }
    if(
-    [fullName, email, username, password].some((field) => 
+    [fullName, email, userName, password].some((field) => 
     field?.trim() === "")
    ){
     throw new ApiError(400, "All fields are required")
    }
-   const existedUser = User.findOne({
-    $or: [ {username}, {email} ]
+   const existedUser = await User.findOne({
+    $or: [ {userName}, {email} ]
    })
    if(existedUser){
     throw new ApiError (409, "User with email our username are existed")
@@ -54,26 +54,26 @@ const registerUser = asyncHandler( async (req, res) => {
     throw new ApiError (404, "avtar is required")
   }
 
-  const user = await user.create({
+  const user = await User.create({
     fullName,
     avatar: avatar.url,
     coverImage: coverImage?.url || "",
     email,
     password,
-    username: username.toLowerCase()
+    userName: userName.toLowerCase()
   })
 
-  const CreatedUser = await user.findById(user._id).select(
+  const createdUser = await User.findById(User._id).select(
     "-password -refreshToken"
   )
 
-  if(!CreatedUser){
+  if(!createdUser){
     throw new ApiError(500, "something went wrong while ragistring the user")
   }
 
 
   return res.status(201).json(
-    new ApiResponse(200, CreatedUser, "user ragistered successfull")
+    new ApiResponse(200, createdUser, "user ragistered successfull")
   )
 
 
